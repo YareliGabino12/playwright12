@@ -1,56 +1,45 @@
 pipeline {
-    agent any
+    agent {
+        docker {
+            image 'mcr.microsoft.com/playwright:v1.42.1-jammy'
+            args '--ipc=host'
+        }
+    }
 
     stages {
 
-      stage('Debug workspace') {
-         steps {
-        sh '''
-          echo "=== Workspace ==="
-          pwd
-          ls -la
-        '''
-         }
-     }
-
-        stage('Clean workspace') {
+        stage('Debug workspace') {
             steps {
-                deleteDir()
+                sh '''
+                  echo "=== Workspace inside container ==="
+                  pwd
+                  ls -la
+                '''
             }
         }
 
-        stage('Checkout') {
+        stage('Install dependencies') {
             steps {
-                git branch: 'main',
-                    url: 'https://github.com/YareliGabino12/playwright12.git'
+                sh 'npm ci'
             }
         }
 
         stage('Run Playwright Tests') {
             steps {
-                sh '''
-                JENKINS_CONTAINER_ID=$(cat /proc/self/cgroup | grep docker | head -1 | cut -d/ -f3)
-
-                docker run --rm \
-                  --volumes-from $JENKINS_CONTAINER_ID \
-                  -w /var/jenkins_home/workspace/playrightNuevo \
-                  mcr.microsoft.com/playwright:v1.57.0-noble \
-                  bash -c "npm ci && npx playwright test"
-                '''
+                sh 'npx playwright test'
             }
         }
     }
 
     post {
         always {
-            publishHTML([
-                reportName : 'Playwright Report',
-                reportDir  : 'playwright-report',
-                reportFiles: 'index.html',
-                keepAll    : true,
-                alwaysLinkToLastBuild: true,
-                allowMissing: false
-            ])
+            archiveArtifacts artifacts: 'playwright-report/**', allowEmptyArchive: true
+        }
+        success {
+            echo '✅ Pruebas ejecutadas correctamente'
+        }
+        failure {
+            echo '❌ Fallaron las pruebas'
         }
     }
 }
