@@ -3,6 +3,16 @@ pipeline {
 
     stages {
 
+      stage('Debug workspace') {
+         steps {
+        sh '''
+          echo "=== Workspace ==="
+          pwd
+          ls -la
+        '''
+         }
+     }
+
         stage('Clean workspace') {
             steps {
                 deleteDir()
