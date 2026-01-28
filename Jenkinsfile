@@ -11,7 +11,7 @@ pipeline {
         stage('Debug workspace') {
             steps {
                 sh '''
-                  echo "=== Workspace inside container ==="
+                  echo "=== Workspace inside Playwright container ==="
                   pwd
                   ls -la
                 '''
