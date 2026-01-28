@@ -19,9 +19,11 @@ pipeline {
         stage('Run Playwright Tests') {
             steps {
                 sh '''
+                JENKINS_CONTAINER_ID=$(cat /proc/self/cgroup | grep docker | head -1 | cut -d/ -f3)
+
                 docker run --rm \
-                  -v "$WORKSPACE:/repo" \
-                  -w /repo \
+                  --volumes-from $JENKINS_CONTAINER_ID \
+                  -w /var/jenkins_home/workspace/playrightNuevo \
                   mcr.microsoft.com/playwright:v1.57.0-noble \
                   bash -c "npm ci && npx playwright test"
                 '''
